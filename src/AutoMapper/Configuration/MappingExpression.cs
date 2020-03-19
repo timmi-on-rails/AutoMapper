@@ -287,7 +287,26 @@ namespace AutoMapper.Configuration
         public IMappingExpression<TDestination, TSource> ReverseMap()
         {
             var reverseMap = new MappingExpression<TDestination, TSource>(MemberList.None, Types.DestinationType, Types.SourceType);
-            reverseMap.MemberConfigurations.AddRange(MemberConfigurations.Select(m => m.Reverse()).Where(m => m != null));
+            foreach (var mcfg in MemberConfigurations)
+            {
+                var rcfg = mcfg.Reverse();
+
+                if (rcfg != null)
+                {
+                    reverseMap.MemberConfigurations.Add(rcfg);
+                    int c = new MemberPath(mcfg.GetDestinationExpression()).Members.Count();
+                    if (c == 1 )
+                    {
+                        string dst = mcfg.DestinationMember.Name;
+                        string src = rcfg.DestinationMember.Name;
+                        if (src != dst)
+                        if (typeof(TSource).GetMember(dst).Length > 0)
+                            reverseMap.ForMember(dst, o => o.Ignore());
+                    }
+                }
+
+            }
+
             ReverseMapExpression = reverseMap;
             reverseMap.IncludeMembersCore(MapToSourceMembers().Select(m => m.GetDestinationExpression()).ToArray());
             ReverseFeatures();

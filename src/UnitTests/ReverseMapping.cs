@@ -7,6 +7,38 @@ using System.Reflection;
 
 namespace AutoMapper.UnitTests
 {
+    public class ReverseMapWithMapFrom : NonValidatingSpecBase
+    {
+        public class Item
+        {
+            public int Id { get; set; }
+            public int LocalId { get; set; }
+        }
+
+        public class ItemDto
+        {
+            public int Id { get; set; }
+        }
+
+        protected override MapperConfiguration Configuration => new MapperConfiguration(cfg =>
+        {
+            cfg.CreateMap<Item, ItemDto>()
+                .ForMember(d => d.Id, o => o.MapFrom(s => s.LocalId))
+                .ReverseMap();
+        });
+
+        [Fact]
+        public void Should_report_the_error()
+        {
+            ItemDto itemDto = new ItemDto { Id = 10 };
+            Item item = new Item { Id = 17, LocalId = 1 };
+            Mapper.Map(itemDto, item);
+            item.LocalId.ShouldBe(10);
+            item.Id.ShouldBe(17);
+        }
+    }
+
+
     public class InvalidReverseMap : NonValidatingSpecBase
     {
         public class One
